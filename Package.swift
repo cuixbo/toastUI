@@ -17,17 +17,14 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // RiveRuntime for Rive animation support (optional)
-        .package(url: "https://github.com/rive-app/rive-ios", from: "6.0.0")
+        // No external dependencies
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "ToastUI",
-            dependencies: [
-                .product(name: "RiveRuntime", package: "rive-ios")
-            ]
+            dependencies: []
         ),
         .testTarget(
             name: "ToastUITests",

@@ -1,6 +1,6 @@
 # ToastUI 🎉
 
-A powerful, all-in-one notification and overlay system for SwiftUI with toasts, dialogs, UI overlays, custom loaders, and Rive animation support - built with modern Swift concurrency and environment-based API.
+A powerful notification system for SwiftUI with toasts, progress overlays, and dialogs - built with modern Swift concurrency and environment-based API.
 
 ![Platform](https://img.shields.io/badge/platform-iOS%2016%2B%20%7C%20macOS%2013.1%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.2+-orange)
@@ -19,16 +19,15 @@ A powerful, all-in-one notification and overlay system for SwiftUI with toasts, 
 - **Multiple Toasts** - Stack with depth effect
 - **Smart Auto-dismiss** - Proper timer management
 
-### 🎭 UI Overlay System
-- **5 Built-in States** - Loading, Empty, Failure, Success, Idle
-- **Custom Views** - Create any overlay with SwiftUI
-- **Rive Animations** - Interactive animated overlays
-- **Custom Loaders** - Provide your own loading indicators
-- **Glass/Solid Styles** - Choose your visual style with full customization
-- **Text Styling** - Complete control over fonts, colors, and weights
-- **Auto-dismiss** - Configurable auto-dismiss timers
-- **Close Button** - Optional dismissal
-- **Retry Support** - Built-in retry callbacks
+### ⏳ Progress Overlay
+- **Independent System** - Separate from toasts for full-screen progress indication
+- **Highly Customizable** - Control size, colors, position, and style
+- **Multiple Positions** - Top, Center, Bottom, or Custom coordinates
+- **Glass Effect Support** - Beautiful translucent glass overlay (iOS 26+)
+- **Custom Views** - Pass your own SwiftUI views for complete control
+- **Blocking/Non-blocking** - Choose whether to block user interaction
+- **Clear Background** - Option for transparent background showing only content
+- **Dismissible** - Optional close button for user dismissal
 
 ### 💬 Dialog System
 - **Custom Dialogs** - Build with SwiftUI views
@@ -124,13 +123,9 @@ struct ContentView: View {
 ## Table of Contents
 
 1. [Toast Notifications](#toast-notifications)
-2. [UI Overlay System](#ui-overlay-system)
-3. [Overlay Configuration](#overlay-configuration)
-4. [Custom Loaders](#custom-loaders)
-5. [Custom Overlays](#custom-overlays)
-6. [Rive Animations](#rive-animations)
-7. [Dialog System](#dialog-system)
-8. [Advanced Features](#advanced-features)
+2. [Progress Overlay](#progress-overlay)
+3. [Dialog System](#dialog-system)
+4. [Advanced Features](#advanced-features)
 
 ---
 
@@ -211,467 +206,279 @@ toast.error("Error: File not found", enableCopy: true)
 ```
 
 ---
+## Progress Overlay
 
-## UI Overlay System
-
-The UI Overlay system provides a powerful way to show loading states, empty states, errors, and custom content over your UI.
+The Progress Overlay system provides a powerful way to show loading states with full customization over appearance, position, and behavior. Unlike toasts, progress overlays are designed for longer-running operations and provide more control over blocking user interaction.
 
 ### Basic Usage
 
 ```swift
-struct MyView: View {
-    @State private var uiState: UIState = .idle
+@Environment(\.toast) var toast
 
-    var body: some View {
-        YourContent()
-            .uiOverlay(state: $uiState)
-    }
-
-    func loadData() {
-        uiState = .loading(message: "Loading...")
-
-        // After loading
-        uiState = .success(message: "Data loaded!")
-
-        // Or on error
-        uiState = .failure(message: "Failed to load")
+// Simple progress overlay
+Button("Show Progress") {
+    toast.showProgressOverlay()
+    
+    // Dismiss after task completes
+    Task {
+        await performTask()
+        toast.dismissProgressOverlay()
     }
 }
+
+// With title and message
+toast.showProgressOverlay(
+    title: "Loading",
+    message: "Please wait..."
+)
+
+// Dismiss
+toast.dismissProgressOverlay()
 ```
 
-### Built-in States
+### Positions
 
 ```swift
-// Loading
-uiState = .loading(message: "Please wait...")
+// Top position
+toast.showProgressOverlay(
+    title: "Loading",
+    position: .top
+)
 
-// Empty state
-uiState = .empty(message: "No data found")
+// Center position (default)
+toast.showProgressOverlay(
+    title: "Processing",
+    position: .center
+)
 
-// Failure
-uiState = .failure(message: "Network error")
+// Bottom position
+toast.showProgressOverlay(
+    title: "Uploading",
+    position: .bottom
+)
 
-// Success
-uiState = .success(message: "Done!")
-
-// Idle (dismisses overlay)
-uiState = .idle
-```
-
-### Retry Callback
-
-```swift
-.uiOverlay(
-    state: $uiState,
-    onRetry: {
-        // Retry logic
-        await loadData()
-    }
+// Custom position
+toast.showProgressOverlay(
+    title: "Loading",
+    position: .custom(x: 200, y: 300)
 )
 ```
 
-### Custom Icons
+### Built-in Configurations
 
 ```swift
-// Empty state with custom icon
-uiState = .empty(message: "No favorites yet") {
-    Image(systemName: "heart.slash")
-        .font(.system(size: 50))
-        .foregroundStyle(.pink)
-}
-
-// Success with custom icon
-uiState = .success(message: "Uploaded!") {
-    Image(systemName: "cloud.fill")
-        .font(.system(size: 50))
-        .foregroundStyle(.blue)
-}
-```
-
----
-
-## Overlay Configuration
-
-The configuration system provides clean, sophisticated control over overlay appearance and behavior.
-
-### Configuration Structure
-
-```swift
-UIOverlayConfiguration(
-    style: OverlayStyle,                    // Glass or solid background
-    titleStyle: TextStyleConfiguration,     // Title text styling
-    messageStyle: TextStyleConfiguration,   // Message text styling
-    showCloseButton: Bool,                  // Show close button
-    autoDismissAfter: TimeInterval?         // Auto-dismiss duration
+// Default - dark background
+toast.showProgressOverlay(
+    title: "Loading",
+    configuration: .default
 )
-```
 
-### Overlay Styles
-
-#### Glass Effect
-```swift
-.glass(
-    intensity: GlassIntensity = .ultraThin,
-    backdropOpacity: Double = 0.3,
-    cornerRadius: CGFloat = 20,
-    maxWidth: CGFloat = 340
-)
-```
-
-**Glass Intensity Options:**
-- `.ultraThin` - Lightest blur effect (default)
-- `.thin` - Light blur effect
-- `.regular` - Medium blur effect
-- `.thick` - Heavy blur effect
-- `.ultraThick` - Heaviest blur effect
-
-#### Solid Color
-```swift
-.solid(
-    backgroundColor: Color,
-    opacity: Double = 1.0,
-    backdropOpacity: Double = 0.3,
-    cornerRadius: CGFloat = 20,
-    maxWidth: CGFloat = 340
-)
-```
-
-### Text Style Configuration
-
-```swift
-TextStyleConfiguration(
-    color: Color = .primary,
-    font: Font = .headline,
-    fontWeight: Font.Weight = .semibold
-)
-```
-
-**Built-in Presets:**
-- `.title` - Default title style (primary, headline, semibold)
-- `.message` - Default message style (secondary, subheadline, regular)
-- `.largeBoldTitle` - Large impactful title
-- `.smallLightMessage` - Subtle small message
-
-### Configuration Examples
-
-#### Example 1: Simple Glass Effect
-```swift
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .glass()
-    )
-)
-```
-
-#### Example 2: Glass Effect with Different Intensities
-```swift
-// Ultra thin glass (lightest)
-.uiOverlay(
-    state: $uiState,
+// Glass effect (iOS 26+)
+toast.showProgressOverlay(
+    title: "Processing",
     configuration: .glass
 )
 
-// Thick glass (heavy blur)
-.uiOverlay(
-    state: $uiState,
-    configuration: .glassThick
+// Light theme
+toast.showProgressOverlay(
+    title: "Uploading",
+    configuration: .light
 )
 
-// Custom glass intensity
-.uiOverlay(
-    state: $uiState,
-    configuration: .glass(intensity: .regular, backdropOpacity: 0.5)
-)
-```
+// Minimal size
+toast.showProgressOverlay(configuration: .minimal)
 
-#### Example 3: Custom Glass with Modified Properties
-```swift
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .glass(
-            intensity: .thick,
-            backdropOpacity: 0.5,
-            cornerRadius: 24,
-            maxWidth: 400
-        ),
-        showCloseButton: true
-    )
+// Large size
+toast.showProgressOverlay(
+    title: "Downloading",
+    message: "This may take a while",
+    configuration: .large
 )
-```
 
-#### Example 4: Solid Color with Custom Text Styles
-```swift
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .solid(
-            backgroundColor: .white,
-            opacity: 1.0,
-            backdropOpacity: 0.5,
-            cornerRadius: 24,
-            maxWidth: 380
-        ),
-        titleStyle: TextStyleConfiguration(
-            color: .blue,
-            font: .title2,
-            fontWeight: .bold
-        ),
-        messageStyle: TextStyleConfiguration(
-            color: .gray,
-            font: .body,
-            fontWeight: .regular
-        ),
-        showCloseButton: true,
-        autoDismissAfter: 3.0
-    )
+// Clear background (only shows content)
+toast.showProgressOverlay(
+    title: "Loading",
+    configuration: .clear
+)
+
+// Non-blocking (allows user interaction)
+toast.showProgressOverlay(
+    title: "Background Task",
+    configuration: .nonBlocking
 )
 ```
 
-#### Example 4: Dark Theme
+### Custom Configuration
+
 ```swift
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .solid(
-            backgroundColor: .black,
-            opacity: 0.95,
-            backdropOpacity: 0.4
-        ),
-        titleStyle: TextStyleConfiguration(
-            color: .white,
-            font: .headline,
-            fontWeight: .semibold
-        ),
-        messageStyle: TextStyleConfiguration(
-            color: .white.opacity(0.7),
-            font: .subheadline,
-            fontWeight: .regular
-        ),
-        showCloseButton: true
-    )
+let config = ProgressOverlayConfiguration(
+    backgroundColor: .blue,
+    backgroundOpacity: 0.9,
+    useGlassEffect: false,
+    clearBackground: false,
+    cornerRadius: 20,
+    width: 250,
+    height: 200,
+    minWidth: 120,
+    minHeight: 120,
+    horizontalPadding: 24,
+    verticalPadding: 24,
+    shadowColor: .black.opacity(0.2),
+    shadowRadius: 8,
+    shadowX: 0,
+    shadowY: 4,
+    isBlocking: true,
+    backdropOpacity: 0.3
+)
+
+toast.showProgressOverlay(
+    title: "Custom Progress",
+    configuration: config
 )
 ```
 
-#### Example 5: Using Presets
-```swift
-// Built-in glass presets
-.uiOverlay(state: $uiState, configuration: .glass)           // Ultra-thin (default)
-.uiOverlay(state: $uiState, configuration: .glassThin)       // Thin blur
-.uiOverlay(state: $uiState, configuration: .glassRegular)    // Regular blur
-.uiOverlay(state: $uiState, configuration: .glassThick)      // Thick blur
-.uiOverlay(state: $uiState, configuration: .glassUltraThick) // Ultra-thick blur
-.uiOverlay(state: $uiState, configuration: .glassWithClose)  // Glass with close button
+### Custom Views
 
-// Solid color presets
-.uiOverlay(state: $uiState, configuration: .default)         // White background
-.uiOverlay(state: $uiState, configuration: .solidBlack)      // Black background
-
-// Custom text styles with preset
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .glass(intensity: .thick),
-        titleStyle: .largeBoldTitle,
-        messageStyle: .smallLightMessage
-    )
-)
-```
-
-### Creating Custom Text Style Presets
+You can pass your own custom SwiftUI views to create completely custom progress overlays:
 
 ```swift
-extension TextStyleConfiguration {
-    static let errorStyle = TextStyleConfiguration(
-        color: .red,
-        font: .title3,
-        fontWeight: .bold
-    )
-
-    static let successStyle = TextStyleConfiguration(
-        color: .green,
-        font: .headline,
-        fontWeight: .semibold
-    )
-}
-
-// Usage
-.uiOverlay(
-    state: $uiState,
-    configuration: .init(
-        style: .glass(),
-        titleStyle: .errorStyle,
-        messageStyle: .message
-    )
-)
-```
-
----
-
-## Custom Loaders
-
-Create your own loading indicators or use the default one.
-
-### Default Loader
-
-```swift
-// Uses built-in gradient circle loader
-uiState = .loading(message: "Loading...")
-```
-
-### Custom Loader
-
-```swift
-// Bouncing dots
-uiState = .loading(message: "Please wait...") {
-    HStack(spacing: 8) {
-        ForEach(0..<3) { index in
-            Circle()
-                .fill(Color.blue)
-                .frame(width: 12, height: 12)
-                .offset(y: animating ? -15 : 0)
-                .animation(
-                    .easeInOut(duration: 0.6)
-                    .repeatForever()
-                    .delay(Double(index) * 0.2),
-                    value: animating
-                )
-        }
-    }
-}
-```
-
-### System ProgressView
-
-```swift
-uiState = .loading(message: "Loading...") {
-    ProgressView()
-        .progressViewStyle(.circular)
-        .scaleEffect(1.5)
-        .tint(.blue)
-}
-```
-
-### Custom Animated Loader
-
-```swift
-uiState = .loading(message: "Uploading...") {
-    ZStack {
-        ForEach(0..<3, id: \.self) { index in
-            Circle()
-                .stroke(Color.blue.opacity(0.5), lineWidth: 2)
-                .scaleEffect(scale + CGFloat(index) * 0.3)
-                .opacity(opacity - Double(index) * 0.3)
-        }
-    }
-    .onAppear {
-        withAnimation(
-            .easeInOut(duration: 1.5)
-            .repeatForever(autoreverses: false)
-        ) {
-            scale = 1.5
-            opacity = 0
-        }
-    }
-}
-```
-
----
-
-## Custom Overlays
-
-Create completely custom overlay content.
-
-### Basic Custom Overlay
-
-```swift
-uiState = .custom {
+// Custom spinner with custom styling
+toast.showProgressOverlay {
     VStack(spacing: 16) {
-        Image(systemName: "star.fill")
-            .font(.system(size: 60))
-            .foregroundStyle(.yellow)
-
-        Text("You earned a star!")
-            .font(.title2)
-            .fontWeight(.bold)
-
-        Button("Awesome!") {
-            uiState = .idle
-        }
-        .buttonStyle(.borderedProminent)
+        ProgressView()
+            .progressViewStyle(.circular)
+            .scaleEffect(2)
+            .tint(.green)
+        Text("Custom Loading")
+            .font(.headline)
+            .foregroundStyle(.green)
     }
-    .padding()
+}
+
+// Custom view with image and text
+toast.showProgressOverlay {
+    VStack(spacing: 16) {
+        Image(systemName: "hourglass")
+            .font(.system(size: 50))
+            .foregroundStyle(.orange)
+            .symbolEffect(.pulse, isActive: true)
+        Text("Processing")
+            .font(.title3)
+            .fontWeight(.semibold)
+        Text("This may take a moment")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+
+// With configuration
+toast.showProgressOverlay(
+    configuration: .glass
+) {
+    // Your custom view here
+    MyCustomProgressView()
 }
 ```
 
-### Interactive Rating Overlay
+### Dismissible Overlays
 
 ```swift
-@State private var rating = 0
+// With close button
+toast.showProgressOverlay(
+    title: "Loading",
+    message: "Tap X to cancel",
+    dismissible: true
+)
 
-uiState = .custom(id: "rating") {
-    VStack(spacing: 20) {
-        Text("Rate Your Experience")
-            .font(.title2)
-            .fontWeight(.bold)
+// Non-blocking and dismissible
+toast.showProgressOverlay(
+    title: "Background Task",
+    message: "You can still interact with the app",
+    configuration: .nonBlocking,
+    dismissible: true
+)
+```
 
-        HStack(spacing: 12) {
-            ForEach(1...5, id: \.self) { star in
-                Button {
-                    rating = star
-                } label: {
-                    Image(systemName: star <= rating ? "star.fill" : "star")
-                        .font(.system(size: 32))
-                        .foregroundStyle(star <= rating ? .yellow : .gray)
-                }
-            }
-        }
+### Practical Examples
 
-        if rating > 0 {
-            Text("Selected: \(rating) stars")
+#### Network Request
+```swift
+func loadData() async {
+    toast.showProgressOverlay(
+        title: "Loading Data",
+        message: "Fetching from server..."
+    )
+    
+    do {
+        let data = try await api.fetchData()
+        toast.dismissProgressOverlay()
+        toast.success("Data loaded successfully!")
+    } catch {
+        toast.dismissProgressOverlay()
+        toast.error("Failed to load data")
+    }
+}
+```
+
+#### Long Running Task
+```swift
+func processLargeFile() async {
+    let config = ProgressOverlayConfiguration(
+        backgroundColor: .purple,
+        backgroundOpacity: 0.9,
+        cornerRadius: 24,
+        isBlocking: true
+    )
+    
+    toast.showProgressOverlay(
+        title: "Processing File",
+        message: "This may take a few minutes",
+        configuration: config,
+        dismissible: false
+    )
+    
+    await performLongTask()
+    
+    toast.dismissProgressOverlay()
+    toast.success("Processing complete!")
+}
+```
+
+#### Custom Progress Indicator
+```swift
+@State private var progress: Double = 0.0
+
+func uploadFile() {
+    toast.showProgressOverlay {
+        VStack(spacing: 20) {
+            ProgressView(value: progress, total: 1.0)
+                .progressViewStyle(.linear)
+                .tint(.blue)
+                .frame(width: 200)
+            
+            Text("Uploading: \(Int(progress * 100))%")
+                .font(.headline)
+            
+            Text("Please don't close the app")
                 .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
-    .padding()
+    
+    // Update progress and dismiss when done
+    Task {
+        for i in 0...100 {
+            progress = Double(i) / 100.0
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        toast.dismissProgressOverlay()
+        toast.success("Upload complete!")
+    }
 }
 ```
 
 ---
 
-## Rive Animations
-
-Integrate Rive animations into your overlays.
-
-### Setup
-
-1. Add your `.riv` file to your Xcode project
-2. Include it in "Copy Bundle Resources"
-3. Use the `.riveAnimation()` modifier
-
-### Basic Rive Overlay
-
-```swift
-uiState = .riveAnimation(
-    riveName: "loading_spinner",
-    stateMachineName: "State Machine 1",
-    title: "Processing",
-    message: "Please wait..."
-)
-```
-
-### Rive with Animation Name
-
-```swift
-uiState = .riveAnimation(
-    riveName: "success_animation",
-    animationName: "celebrate",
-    title: "Success!",
-    message: "Task completed"
-)
-```
-
----
 
 ## Dialog System
 
@@ -718,96 +525,6 @@ Button("Show Dialog") {
 
 ## Advanced Features
 
-### Combining Toasts and Overlays
-
-```swift
-struct MyView: View {
-    @Environment(\.toast) var toast
-    @State private var uiState: UIState = .idle
-
-    func performAction() async {
-        // Show loading overlay
-        uiState = .loading(message: "Processing...")
-
-        do {
-            try await someAsyncTask()
-
-            // Dismiss overlay
-            uiState = .idle
-
-            // Show success toast
-            toast.success("Task completed!")
-        } catch {
-            // Dismiss overlay
-            uiState = .idle
-
-            // Show error toast
-            toast.error("Task failed", enableCopy: true)
-        }
-    }
-}
-```
-
-### ViewModel Integration
-
-```swift
-@Observable
-class MyViewModel {
-    var uiState: UIState = .idle
-
-    func loadData() async {
-        uiState = .loading(message: "Loading...")
-
-        do {
-            let data = try await api.fetchData()
-            uiState = data.isEmpty ? .empty(message: "No data") : .idle
-        } catch {
-            uiState = .failure(message: error.localizedDescription)
-        }
-    }
-}
-
-struct MyView: View {
-    @State private var viewModel = MyViewModel()
-
-    var body: some View {
-        Content()
-            .uiOverlay(
-                state: $viewModel.uiState,
-                onRetry: {
-                    await viewModel.loadData()
-                }
-            )
-    }
-}
-```
-
-### Network Request Pattern
-
-```swift
-func fetchUsers() async {
-    uiState = .loading(message: "Fetching users...") {
-        // Custom loader
-        ProgressView()
-            .scaleEffect(1.5)
-    }
-
-    do {
-        let users = try await api.getUsers()
-
-        if users.isEmpty {
-            uiState = .empty(message: "No users found")
-        } else {
-            // Process users
-            uiState = .idle
-            toast.success("Loaded \(users.count) users")
-        }
-    } catch {
-        uiState = .failure(message: "Failed to fetch users")
-    }
-}
-```
-
 ---
 
 ## Platform Support
@@ -822,7 +539,7 @@ On iOS 16-25, the `.glass` style automatically falls back to `.regularMaterial`.
 
 ### macOS Support
 
-Full support on macOS 13.1+. Toast notifications use overlay-based rendering on macOS.
+Full support on macOS 13.1+.
 
 ---
 
@@ -846,85 +563,13 @@ toast.progress(_ title: String, message: String? = nil, alignment: ToastAlignmen
 toast.dismiss(id: UUID)
 ```
 
-### UIState Enum
-
-```swift
-public enum UIState {
-    case idle
-    case loading(message: String? = nil, loader: AnyView? = nil)
-    case empty(message: String = "No data found", icon: AnyView? = nil)
-    case failure(message: String, icon: AnyView? = nil)
-    case success(message: String, icon: AnyView? = nil)
-    case custom(id: String, view: AnyView)
-    case rive(id: String, riveName: String, stateMachineName: String? = nil, animationName: String? = nil, title: String? = nil, message: String? = nil)
-}
-```
-
-### OverlayStyle Enum
-
-```swift
-public enum OverlayStyle {
-    case glass(
-        backdropOpacity: Double = 0.3,
-        cornerRadius: CGFloat = 20,
-        maxWidth: CGFloat = 340
-    )
-
-    case solid(
-        backgroundColor: Color,
-        opacity: Double = 1.0,
-        backdropOpacity: Double = 0.3,
-        cornerRadius: CGFloat = 20,
-        maxWidth: CGFloat = 340
-    )
-}
-```
-
-### TextStyleConfiguration
-
-```swift
-public struct TextStyleConfiguration {
-    public let color: Color
-    public let font: Font
-    public let fontWeight: Font.Weight
-
-    // Presets
-    public static let title: TextStyleConfiguration
-    public static let message: TextStyleConfiguration
-    public static let largeBoldTitle: TextStyleConfiguration
-    public static let smallLightMessage: TextStyleConfiguration
-}
-```
-
-### UIOverlayConfiguration
-
-```swift
-public struct UIOverlayConfiguration {
-    public let style: OverlayStyle
-    public let titleStyle: TextStyleConfiguration
-    public let messageStyle: TextStyleConfiguration
-    public let showCloseButton: Bool
-    public let autoDismissAfter: TimeInterval?
-
-    // Computed properties from style
-    public var backdropOpacity: Double
-    public var cornerRadius: CGFloat
-    public var maxWidth: CGFloat
-    public var backgroundColor: Color?
-    public var overlayOpacity: Double?
-}
-```
 
 ---
 
 ## Examples
 
-Check out the included example files:
-- `ToastExamplesView.swift` - Toast notifications
-- `CustomLoaderExamples.swift` - Custom loading indicators
-- `CustomUIStateExamples.swift` - Custom overlays and Rive animations
-- `UIOverlayAdvancedExamples.swift` - Advanced overlay features
-- `UIOverlayConfigurationExamples.swift` - Configuration examples
+Check out the included example file:
+- `ToastUIExamplesView.swift` - Toast and Dialog examples
 
 ---
 

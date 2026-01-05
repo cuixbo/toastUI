@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Comprehensive examples showcase for ToastUI
-/// Demonstrates Toast Notifications, Dialogs, and UI Overlays
+/// Demonstrates Toast Notifications, Dialogs, and Progress Overlays
 public struct ToastUIExamplesView: View {
     public init() {}
 
@@ -19,14 +19,14 @@ public struct ToastUIExamplesView: View {
                     Label("Toasts", systemImage: "bell.fill")
                 }
 
+            ProgressOverlayExamplesTab()
+                .tabItem {
+                    Label("Progress", systemImage: "circle.dashed")
+                }
+
             DialogExamplesTab()
                 .tabItem {
                     Label("Dialogs", systemImage: "bubble.left.and.bubble.right.fill")
-                }
-
-            UIOverlayExamplesTab()
-                .tabItem {
-                    Label("Overlays", systemImage: "square.stack.fill")
                 }
         }
     }
@@ -1091,631 +1091,285 @@ struct DialogExamplesTab: View {
     #endif
 }
 
-// MARK: - UI Overlay Examples Tab
 
-struct UIOverlayExamplesTab: View {
-    @State private var uiState: UIState = .idle
-    @State private var currentConfiguration: UIOverlayConfiguration = .glass
+// MARK: - Progress Overlay Examples Tab
+
+struct ProgressOverlayExamplesTab: View {
     @Environment(\.toast) var toast
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Loading States
-                    ExampleSection(title: "Loading States", icon: "arrow.triangle.2.circlepath") {
+                    // Basic Progress Overlays
+                    ExampleSection(title: "Basic Progress", icon: "arrow.triangle.2.circlepath") {
                         VStack(spacing: 12) {
-                            Button("Simple Loading") {
-                                uiState = .loading(message: "Loading...")
-                                dismissAfter(2)
-                            }
-                            .buttonStyle(.borderedProminent)
-
-                            Button("Processing Data") {
-                                uiState = .loading(message: "Processing your request...")
-                                dismissAfter(3)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.blue)
-
-                            Button("Custom Loader") {
-                                uiState = .loading(message: "Uploading files") {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                        .scaleEffect(1.5)
-                                        .tint(.purple)
+                            Button("Simple Progress") {
+                                toast.showProgressOverlay()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
                                 }
-                                dismissAfter(2.5)
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.purple)
 
-                            Button("Long Operation") {
-                                uiState = .loading(message: "This may take a while...")
-                                dismissAfter(4)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.orange)
-                        }
-                    }
-
-                    // Empty States
-                    ExampleSection(title: "Empty States", icon: "tray") {
-                        VStack(spacing: 12) {
-                            Button("No Items") {
-                                currentConfiguration = .withClose
-                                uiState = .empty(message: "No items found")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.gray)
-
-                            Button("No Results") {
-                                currentConfiguration = .withClose
-                                uiState = .empty(message: "No search results")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.gray.opacity(0.8))
-
-                            Button("Empty Inbox") {
-                                currentConfiguration = .withClose
-                                uiState = .empty(message: "Your inbox is empty") {
-                                    Image(systemName: "envelope.open")
-                                        .font(.system(size: 60))
-                                        .foregroundStyle(.blue)
+                            Button("With Title") {
+                                toast.showProgressOverlay(title: "Loading...")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
                                 }
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.blue)
 
-                            Button("No Favorites") {
-                                currentConfiguration = .withClose
-                                uiState = .empty(message: "No favorites yet") {
-                                    Image(systemName: "heart.slash")
-                                        .font(.system(size: 60))
-                                        .foregroundStyle(.red)
+                            Button("With Title and Message") {
+                                toast.showProgressOverlay(
+                                    title: "Please Wait",
+                                    message: "Processing your request"
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    toast.dismissProgressOverlay()
                                 }
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red)
-
-                            Text("Empty states show with close button")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    // Success States
-                    ExampleSection(title: "Success States", icon: "checkmark.circle.fill") {
-                        VStack(spacing: 12) {
-                            Button("Operation Complete") {
-                                uiState = .success(message: "Operation completed successfully!")
-                                dismissAfter(2)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.green)
-
-                            Button("Data Saved") {
-                                uiState = .success(message: "Your changes have been saved")
-                                dismissAfter(2.5)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.green.opacity(0.8))
-
-                            Button("Upload Complete") {
-                                uiState = .success(message: "File uploaded successfully")
-                                dismissAfter(2)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.mint)
-
-                            Button("Payment Successful") {
-                                uiState = .success(message: "Payment processed successfully")
-                                dismissAfter(3)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.teal)
-                        }
-                    }
-
-                    // Failure States
-                    ExampleSection(title: "Failure States", icon: "exclamationmark.triangle.fill") {
-                        VStack(spacing: 12) {
-                            Button("Network Error") {
-                                currentConfiguration = .withClose
-                                uiState = .failure(message: "Network connection failed")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red)
-
-                            Button("Server Error") {
-                                currentConfiguration = .withClose
-                                uiState = .failure(message: "Server error occurred. Please try again.")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red.opacity(0.8))
-
-                            Button("Authentication Failed") {
-                                currentConfiguration = .withClose
-                                uiState = .failure(message: "Authentication failed. Please login again.")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.orange)
-
-                            Button("Permission Denied") {
-                                currentConfiguration = .withClose
-                                uiState = .failure(message: "You don't have permission to perform this action")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.pink)
-
-                            Text("Failure states show with close button and retry option")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    // Glass Intensity Examples
-                    ExampleSection(title: "Glass Intensities", icon: "circle.hexagongrid.fill") {
-                        VStack(spacing: 12) {
-                            Button("Ultra Thin (Lightest)") {
-                                showGlassOverlay(intensity: .ultraThin)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.purple.opacity(0.6))
-
-                            Button("Thin") {
-                                showGlassOverlay(intensity: .thin)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.purple.opacity(0.7))
-
-                            Button("Regular") {
-                                showGlassOverlay(intensity: .regular)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.purple.opacity(0.8))
-
-                            Button("Thick") {
-                                showGlassOverlay(intensity: .thick)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.purple.opacity(0.9))
-
-                            Button("Ultra Thick (Heaviest)") {
-                                showGlassOverlay(intensity: .ultraThick)
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.purple)
                         }
                     }
 
-                    // Custom Styled Overlays
-                    ExampleSection(title: "Custom Styles", icon: "paintbrush.fill") {
+                    // Positions
+                    ExampleSection(title: "Positions", icon: "arrow.up.and.down") {
                         VStack(spacing: 12) {
-                            Button("Dark Theme") {
-                                showDarkOverlay()
+                            Button("Top Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .top
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.black)
+
+                            Button("Center Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .center
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Bottom Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .bottom
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+
+                    // Configurations
+                    ExampleSection(title: "Configurations", icon: "slider.horizontal.3") {
+                        VStack(spacing: 12) {
+                            Button("Glass Effect") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: .glass
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
 
                             Button("Light Theme") {
-                                showLightOverlay()
+                                toast.showProgressOverlay(
+                                    title: "Processing",
+                                    configuration: .light
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.white)
 
-                            Button("Colorful Overlay") {
-                                showColorfulOverlay()
+                            Button("Minimal Size") {
+                                toast.showProgressOverlay(
+                                    configuration: .minimal
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.indigo)
 
-                            Button("Gradient Background") {
-                                showGradientOverlay()
+                            Button("Large Size") {
+                                toast.showProgressOverlay(
+                                    title: "Uploading",
+                                    message: "Please wait while we process",
+                                    configuration: .large
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.pink)
 
-                            Button("Minimal Style") {
-                                showMinimalOverlay()
+                            Button("Clear Background") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: .clear
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.gray)
                         }
                     }
 
-                    // Custom Content Overlays
-                    ExampleSection(title: "Custom Content", icon: "square.stack.3d.up.fill") {
+                    // Custom View
+                    ExampleSection(title: "Custom View", icon: "paintbrush.fill") {
                         VStack(spacing: 12) {
-                            Button("Welcome Message") {
-                                showWelcomeOverlay()
+                            Button("Custom Spinner") {
+                                toast.showProgressOverlay {
+                                    VStack(spacing: 16) {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                            .scaleEffect(2)
+                                            .tint(.green)
+                                        Text("Custom Loading")
+                                            .font(.headline)
+                                            .foregroundStyle(.green)
+                                    }
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.blue)
-
-                            Button("Achievement Unlocked") {
-                                showAchievementOverlay()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.yellow)
-
-                            Button("Rating Prompt") {
-                                showRatingOverlay()
+                            
+                            Button("Image and Text") {
+                                toast.showProgressOverlay {
+                                    VStack(spacing: 16) {
+                                        if #available(iOS 17.0, macOS 14.0, *) {
+                                            Image(systemName: "hourglass")
+                                                .font(.system(size: 50))
+                                                .foregroundStyle(.orange)
+                                                .symbolEffect(.pulse, isActive: true)
+                                        } else {
+                                            Image(systemName: "hourglass")
+                                                .font(.system(size: 50))
+                                                .foregroundStyle(.orange)
+                                        }
+                                        Text("Processing")
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                        Text("This may take a moment")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    toast.dismissProgressOverlay()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.orange)
-
-                            Button("Countdown Timer") {
-                                showCountdownOverlay()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red)
                         }
                     }
 
-                    // Async Operations
-                    ExampleSection(title: "Async Operations", icon: "network") {
+                    // Dismissible
+                    ExampleSection(title: "Dismissible", icon: "xmark.circle") {
                         VStack(spacing: 12) {
-                            Button("Simulate API Call") {
-                                Task {
-                                    await simulateAsyncOperation()
-                                }
+                            Button("Dismissible Overlay") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    message: "Tap X to dismiss",
+                                    dismissible: true
+                                )
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.cyan)
 
-                            Button("Fetch User Data") {
-                                Task {
-                                    await fetchUserData()
-                                }
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.blue)
-
-                            Button("Upload File") {
-                                Task {
-                                    await uploadFile()
-                                }
+                            Button("Non-blocking") {
+                                toast.showProgressOverlay(
+                                    title: "Background Task",
+                                    message: "You can still interact",
+                                    configuration: .nonBlocking,
+                                    dismissible: true
+                                )
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.green)
+                        }
+                    }
 
-                            Button("Delete Account") {
-                                Task {
-                                    await deleteAccount()
+                    // Custom Colors
+                    ExampleSection(title: "Custom Styling", icon: "paintpalette.fill") {
+                        VStack(spacing: 12) {
+                            Button("Blue Theme") {
+                                let config = ProgressOverlayConfiguration(
+                                    backgroundColor: .blue,
+                                    backgroundOpacity: 0.9
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
                                 }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.red)
+
+                            Button("Purple Gradient") {
+                                let config = ProgressOverlayConfiguration(
+                                    backgroundColor: .purple,
+                                    backgroundOpacity: 0.85,
+                                    cornerRadius: 24
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Processing",
+                                    message: "Please wait",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.purple)
+
+                            Button("Custom Size") {
+                                let config = ProgressOverlayConfiguration(
+                                    cornerRadius: 16, width: 200,
+                                    height: 150
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Custom",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
                         }
                     }
                 }
                 .padding()
             }
-            .navigationTitle("UI Overlay Examples")
-        }
-        .uiOverlay(
-            state: $uiState,
-            configuration: currentConfiguration,
-            onRetry: {
-                // Retry logic
-                await simulateAsyncOperation()
-            }
-        )
-    }
-
-    // MARK: - Helper Methods
-
-    private func dismissAfter(_ seconds: Double) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-            uiState = .idle
-        }
-    }
-
-    private func showGlassOverlay(intensity: GlassIntensity = .ultraThin) {
-        // Set the glass configuration with specified intensity
-        currentConfiguration = UIOverlayConfiguration.glass(intensity: intensity)
-
-        // Create custom state with glass effect configuration
-        uiState = .custom(id: "glass-\(intensity)") {
-            VStack(spacing: 16) {
-                Image(systemName: "circle.hexagongrid.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.purple)
-
-                Text("Glass Effect")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text(intensityDescription(intensity))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding()
-        }
-        dismissAfter(3)
-    }
-
-    private func intensityDescription(_ intensity: GlassIntensity) -> String {
-        switch intensity {
-        case .ultraThin:
-            return "Ultra Thin - Lightest blur effect"
-        case .thin:
-            return "Thin - Light blur effect"
-        case .regular:
-            return "Regular - Medium blur effect"
-        case .thick:
-            return "Thick - Heavy blur effect"
-        case .ultraThick:
-            return "Ultra Thick - Heaviest blur effect"
-        }
-    }
-
-    private func showDarkOverlay() {
-        uiState = .success(message: "Dark themed overlay")
-        dismissAfter(2)
-    }
-
-    private func showCustomColorOverlay() {
-        uiState = .custom(id: "custom") {
-            VStack(spacing: 16) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.yellow)
-
-                Text("Custom Overlay")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("You can create any custom content!")
-                    .foregroundStyle(.secondary)
-
-                Button("Dismiss") {
-                    uiState = .idle
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .padding()
-        }
-        // Don't auto-dismiss - has dismiss button
-    }
-
-    private func simulateAsyncOperation() async {
-        // Show loading
-        uiState = .loading(message: "Fetching data...")
-
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-
-        // Random success or failure
-        if Bool.random() {
-            uiState = .success(message: "Data loaded successfully!")
-
-            // Auto dismiss and show toast
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                uiState = .idle
-                toast.success(title: "API call completed")
-            }
-        } else {
-            uiState = .failure(message: "Failed to fetch data. Tap retry.")
-        }
-    }
-
-    private func showLightOverlay() {
-        currentConfiguration = .init(
-            style: .solid(backgroundColor: .white, opacity: 1.0),
-            titleStyle: TextStyleConfiguration(color: .black, font: .title2, fontWeight: .bold),
-            messageStyle: TextStyleConfiguration(color: .gray, font: .subheadline, fontWeight: .regular)
-        )
-        uiState = .success(message: "Light theme overlay")
-        dismissAfter(2.5)
-    }
-
-    private func showColorfulOverlay() {
-        currentConfiguration = .init(
-            style: .solid(backgroundColor: .indigo, opacity: 0.95),
-            titleStyle: TextStyleConfiguration(color: .white, font: .title2, fontWeight: .bold),
-            messageStyle: TextStyleConfiguration(color: .white.opacity(0.9), font: .subheadline, fontWeight: .regular)
-        )
-        uiState = .success(message: "Colorful overlay design")
-        dismissAfter(2.5)
-    }
-
-    private func showGradientOverlay() {
-        currentConfiguration = .init(
-            style: .solid(backgroundColor: .pink, opacity: 0.9),
-            titleStyle: TextStyleConfiguration(color: .white, font: .title2, fontWeight: .bold),
-            messageStyle: TextStyleConfiguration(color: .white.opacity(0.8), font: .body, fontWeight: .medium)
-        )
-        uiState = .success(message: "Beautiful gradient styling")
-        dismissAfter(2.5)
-    }
-
-    private func showMinimalOverlay() {
-        currentConfiguration = .init(
-            style: .solid(backgroundColor: .white, opacity: 1.0, backdropOpacity: 0.1),
-            titleStyle: TextStyleConfiguration(color: .black, font: .headline, fontWeight: .semibold),
-            messageStyle: TextStyleConfiguration(color: .gray, font: .caption, fontWeight: .regular)
-        )
-        uiState = .success(message: "Minimal clean design")
-        dismissAfter(2.5)
-    }
-
-    private func showWelcomeOverlay() {
-        currentConfiguration = .glass
-        uiState = .custom(id: "welcome") {
-            VStack(spacing: 20) {
-                Image(systemName: "hand.wave.fill")
-                    .font(.system(size: 70))
-                    .foregroundStyle(.yellow)
-
-                Text("Welcome!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("Thank you for using our app")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button("Get Started") {
-                    uiState = .idle
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-            }
-            .padding(30)
-        }
-        // Don't auto-dismiss - user must interact with button
-    }
-
-    private func showAchievementOverlay() {
-        currentConfiguration = .glass(intensity: .regular)
-        uiState = .custom(id: "achievement") {
-            VStack(spacing: 20) {
-                Image(systemName: "trophy.fill")
-                    .font(.system(size: 70))
-                    .foregroundStyle(.yellow)
-
-                Text("Achievement Unlocked!")
-                    .font(.title)
-                    .fontWeight(.bold)
-
-                Text("You've completed 100 tasks")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                HStack(spacing: 8) {
-                    ForEach(0..<5) { _ in
-                        Image(systemName: "star.fill")
-                            .foregroundStyle(.yellow)
-                    }
-                }
-
-                Button("Awesome!") {
-                    uiState = .idle
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.yellow)
-            }
-            .padding(30)
-        }
-        // Don't auto-dismiss - user must acknowledge achievement
-    }
-
-    private func showRatingOverlay() {
-        currentConfiguration = .glass(intensity: .thin)
-        uiState = .custom(id: "rating") {
-            VStack(spacing: 24) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.orange)
-
-                Text("Enjoying the app?")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Rate us on the App Store")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                HStack(spacing: 12) {
-                    Button("Maybe Later") {
-                        uiState = .idle
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button("Rate Now") {
-                        uiState = .idle
-                        toast.success(title: "Thank you!")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.orange)
-                }
-            }
-            .padding(30)
-        }
-        // Don't auto-dismiss - user must make a choice
-    }
-
-    private func showCountdownOverlay() {
-        currentConfiguration = .glass(intensity: .thick)
-        uiState = .custom(id: "countdown") {
-            VStack(spacing: 20) {
-                Image(systemName: "timer")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.red)
-
-                Text("Limited Time Offer!")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("3:00")
-                    .font(.system(size: 50, weight: .bold, design: .rounded))
-                    .foregroundStyle(.red)
-
-                Text("Don't miss out on this exclusive deal")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button("Claim Offer") {
-                    uiState = .idle
-                    toast.success(title: "Offer claimed!")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-            }
-            .padding(30)
-        }
-        // Don't auto-dismiss - requires user action
-    }
-
-    private func fetchUserData() async {
-        currentConfiguration = .glass(intensity: .thin)
-        uiState = .loading(message: "Fetching user profile...")
-
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-
-        uiState = .success(message: "Profile loaded successfully")
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            uiState = .idle
-        }
-    }
-
-    private func uploadFile() async {
-        currentConfiguration = .glass(intensity: .regular)
-        uiState = .loading(message: "Uploading file...")
-
-        try? await Task.sleep(nanoseconds: 2_500_000_000)
-
-        if Bool.random() {
-            uiState = .success(message: "File uploaded successfully")
-            dismissAfter(2)
-        } else {
-            uiState = .failure(message: "Upload failed. Check your connection.")
-        }
-    }
-
-    private func deleteAccount() async {
-        currentConfiguration = .init(
-            style: .solid(backgroundColor: .red.opacity(0.1), opacity: 1.0),
-            titleStyle: TextStyleConfiguration(color: .red, font: .title2, fontWeight: .bold),
-            messageStyle: TextStyleConfiguration(color: .red.opacity(0.8), font: .subheadline, fontWeight: .regular)
-        )
-
-        uiState = .loading(message: "Deleting account...")
-
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-
-        uiState = .success(message: "Account deleted successfully")
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            uiState = .idle
+            .navigationTitle("Progress Overlay")
         }
     }
 }
+
 
 // MARK: - Helper Views
 
