@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Comprehensive examples showcase for ToastUI
-/// Demonstrates Toast Notifications and Dialogs
+/// Demonstrates Toast Notifications, Dialogs, and Progress Overlays
 public struct ToastUIExamplesView: View {
     public init() {}
 
@@ -17,6 +17,11 @@ public struct ToastUIExamplesView: View {
             ToastExamplesTab()
                 .tabItem {
                     Label("Toasts", systemImage: "bell.fill")
+                }
+
+            ProgressOverlayExamplesTab()
+                .tabItem {
+                    Label("Progress", systemImage: "circle.dashed")
                 }
 
             DialogExamplesTab()
@@ -1084,6 +1089,285 @@ struct DialogExamplesTab: View {
         .padding(30)
     }
     #endif
+}
+
+
+// MARK: - Progress Overlay Examples Tab
+
+struct ProgressOverlayExamplesTab: View {
+    @Environment(\.toast) var toast
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Basic Progress Overlays
+                    ExampleSection(title: "Basic Progress", icon: "arrow.triangle.2.circlepath") {
+                        VStack(spacing: 12) {
+                            Button("Simple Progress") {
+                                toast.showProgressOverlay()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("With Title") {
+                                toast.showProgressOverlay(title: "Loading...")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.blue)
+
+                            Button("With Title and Message") {
+                                toast.showProgressOverlay(
+                                    title: "Please Wait",
+                                    message: "Processing your request"
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.purple)
+                        }
+                    }
+
+                    // Positions
+                    ExampleSection(title: "Positions", icon: "arrow.up.and.down") {
+                        VStack(spacing: 12) {
+                            Button("Top Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .top
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Center Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .center
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Bottom Position") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    position: .bottom
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+
+                    // Configurations
+                    ExampleSection(title: "Configurations", icon: "slider.horizontal.3") {
+                        VStack(spacing: 12) {
+                            Button("Glass Effect") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: .glass
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Light Theme") {
+                                toast.showProgressOverlay(
+                                    title: "Processing",
+                                    configuration: .light
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Minimal Size") {
+                                toast.showProgressOverlay(
+                                    configuration: .minimal
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Large Size") {
+                                toast.showProgressOverlay(
+                                    title: "Uploading",
+                                    message: "Please wait while we process",
+                                    configuration: .large
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Clear Background") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: .clear
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+
+                    // Custom View
+                    ExampleSection(title: "Custom View", icon: "paintbrush.fill") {
+                        VStack(spacing: 12) {
+                            Button("Custom Spinner") {
+                                toast.showProgressOverlay {
+                                    VStack(spacing: 16) {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                            .scaleEffect(2)
+                                            .tint(.green)
+                                        Text("Custom Loading")
+                                            .font(.headline)
+                                            .foregroundStyle(.green)
+                                    }
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            
+                            Button("Image and Text") {
+                                toast.showProgressOverlay {
+                                    VStack(spacing: 16) {
+                                        if #available(iOS 17.0, macOS 14.0, *) {
+                                            Image(systemName: "hourglass")
+                                                .font(.system(size: 50))
+                                                .foregroundStyle(.orange)
+                                                .symbolEffect(.pulse, isActive: true)
+                                        } else {
+                                            Image(systemName: "hourglass")
+                                                .font(.system(size: 50))
+                                                .foregroundStyle(.orange)
+                                        }
+                                        Text("Processing")
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                        Text("This may take a moment")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
+                        }
+                    }
+
+                    // Dismissible
+                    ExampleSection(title: "Dismissible", icon: "xmark.circle") {
+                        VStack(spacing: 12) {
+                            Button("Dismissible Overlay") {
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    message: "Tap X to dismiss",
+                                    dismissible: true
+                                )
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Non-blocking") {
+                                toast.showProgressOverlay(
+                                    title: "Background Task",
+                                    message: "You can still interact",
+                                    configuration: .nonBlocking,
+                                    dismissible: true
+                                )
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.green)
+                        }
+                    }
+
+                    // Custom Colors
+                    ExampleSection(title: "Custom Styling", icon: "paintpalette.fill") {
+                        VStack(spacing: 12) {
+                            Button("Blue Theme") {
+                                let config = ProgressOverlayConfiguration(
+                                    backgroundColor: .blue,
+                                    backgroundOpacity: 0.9
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Loading",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Purple Gradient") {
+                                let config = ProgressOverlayConfiguration(
+                                    backgroundColor: .purple,
+                                    backgroundOpacity: 0.85,
+                                    cornerRadius: 24
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Processing",
+                                    message: "Please wait",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.purple)
+
+                            Button("Custom Size") {
+                                let config = ProgressOverlayConfiguration(
+                                    cornerRadius: 16, width: 200,
+                                    height: 150
+                                )
+                                toast.showProgressOverlay(
+                                    title: "Custom",
+                                    configuration: config
+                                )
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    toast.dismissProgressOverlay()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Progress Overlay")
+        }
+    }
 }
 
 

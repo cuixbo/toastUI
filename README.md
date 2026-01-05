@@ -1,6 +1,6 @@
 # ToastUI 🎉
 
-A powerful notification system for SwiftUI with toasts and dialogs - built with modern Swift concurrency and environment-based API.
+A powerful notification system for SwiftUI with toasts, progress overlays, and dialogs - built with modern Swift concurrency and environment-based API.
 
 ![Platform](https://img.shields.io/badge/platform-iOS%2016%2B%20%7C%20macOS%2013.1%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.2+-orange)
@@ -18,6 +18,16 @@ A powerful notification system for SwiftUI with toasts and dialogs - built with 
 - **Copy to Clipboard** - One-tap copy for errors
 - **Multiple Toasts** - Stack with depth effect
 - **Smart Auto-dismiss** - Proper timer management
+
+### ⏳ Progress Overlay
+- **Independent System** - Separate from toasts for full-screen progress indication
+- **Highly Customizable** - Control size, colors, position, and style
+- **Multiple Positions** - Top, Center, Bottom, or Custom coordinates
+- **Glass Effect Support** - Beautiful translucent glass overlay (iOS 26+)
+- **Custom Views** - Pass your own SwiftUI views for complete control
+- **Blocking/Non-blocking** - Choose whether to block user interaction
+- **Clear Background** - Option for transparent background showing only content
+- **Dismissible** - Optional close button for user dismissal
 
 ### 💬 Dialog System
 - **Custom Dialogs** - Build with SwiftUI views
@@ -113,8 +123,9 @@ struct ContentView: View {
 ## Table of Contents
 
 1. [Toast Notifications](#toast-notifications)
-2. [Dialog System](#dialog-system)
-3. [Advanced Features](#advanced-features)
+2. [Progress Overlay](#progress-overlay)
+3. [Dialog System](#dialog-system)
+4. [Advanced Features](#advanced-features)
 
 ---
 
@@ -195,6 +206,279 @@ toast.error("Error: File not found", enableCopy: true)
 ```
 
 ---
+## Progress Overlay
+
+The Progress Overlay system provides a powerful way to show loading states with full customization over appearance, position, and behavior. Unlike toasts, progress overlays are designed for longer-running operations and provide more control over blocking user interaction.
+
+### Basic Usage
+
+```swift
+@Environment(\.toast) var toast
+
+// Simple progress overlay
+Button("Show Progress") {
+    toast.showProgressOverlay()
+    
+    // Dismiss after task completes
+    Task {
+        await performTask()
+        toast.dismissProgressOverlay()
+    }
+}
+
+// With title and message
+toast.showProgressOverlay(
+    title: "Loading",
+    message: "Please wait..."
+)
+
+// Dismiss
+toast.dismissProgressOverlay()
+```
+
+### Positions
+
+```swift
+// Top position
+toast.showProgressOverlay(
+    title: "Loading",
+    position: .top
+)
+
+// Center position (default)
+toast.showProgressOverlay(
+    title: "Processing",
+    position: .center
+)
+
+// Bottom position
+toast.showProgressOverlay(
+    title: "Uploading",
+    position: .bottom
+)
+
+// Custom position
+toast.showProgressOverlay(
+    title: "Loading",
+    position: .custom(x: 200, y: 300)
+)
+```
+
+### Built-in Configurations
+
+```swift
+// Default - dark background
+toast.showProgressOverlay(
+    title: "Loading",
+    configuration: .default
+)
+
+// Glass effect (iOS 26+)
+toast.showProgressOverlay(
+    title: "Processing",
+    configuration: .glass
+)
+
+// Light theme
+toast.showProgressOverlay(
+    title: "Uploading",
+    configuration: .light
+)
+
+// Minimal size
+toast.showProgressOverlay(configuration: .minimal)
+
+// Large size
+toast.showProgressOverlay(
+    title: "Downloading",
+    message: "This may take a while",
+    configuration: .large
+)
+
+// Clear background (only shows content)
+toast.showProgressOverlay(
+    title: "Loading",
+    configuration: .clear
+)
+
+// Non-blocking (allows user interaction)
+toast.showProgressOverlay(
+    title: "Background Task",
+    configuration: .nonBlocking
+)
+```
+
+### Custom Configuration
+
+```swift
+let config = ProgressOverlayConfiguration(
+    backgroundColor: .blue,
+    backgroundOpacity: 0.9,
+    useGlassEffect: false,
+    clearBackground: false,
+    cornerRadius: 20,
+    width: 250,
+    height: 200,
+    minWidth: 120,
+    minHeight: 120,
+    horizontalPadding: 24,
+    verticalPadding: 24,
+    shadowColor: .black.opacity(0.2),
+    shadowRadius: 8,
+    shadowX: 0,
+    shadowY: 4,
+    isBlocking: true,
+    backdropOpacity: 0.3
+)
+
+toast.showProgressOverlay(
+    title: "Custom Progress",
+    configuration: config
+)
+```
+
+### Custom Views
+
+You can pass your own custom SwiftUI views to create completely custom progress overlays:
+
+```swift
+// Custom spinner with custom styling
+toast.showProgressOverlay {
+    VStack(spacing: 16) {
+        ProgressView()
+            .progressViewStyle(.circular)
+            .scaleEffect(2)
+            .tint(.green)
+        Text("Custom Loading")
+            .font(.headline)
+            .foregroundStyle(.green)
+    }
+}
+
+// Custom view with image and text
+toast.showProgressOverlay {
+    VStack(spacing: 16) {
+        Image(systemName: "hourglass")
+            .font(.system(size: 50))
+            .foregroundStyle(.orange)
+            .symbolEffect(.pulse, isActive: true)
+        Text("Processing")
+            .font(.title3)
+            .fontWeight(.semibold)
+        Text("This may take a moment")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+
+// With configuration
+toast.showProgressOverlay(
+    configuration: .glass
+) {
+    // Your custom view here
+    MyCustomProgressView()
+}
+```
+
+### Dismissible Overlays
+
+```swift
+// With close button
+toast.showProgressOverlay(
+    title: "Loading",
+    message: "Tap X to cancel",
+    dismissible: true
+)
+
+// Non-blocking and dismissible
+toast.showProgressOverlay(
+    title: "Background Task",
+    message: "You can still interact with the app",
+    configuration: .nonBlocking,
+    dismissible: true
+)
+```
+
+### Practical Examples
+
+#### Network Request
+```swift
+func loadData() async {
+    toast.showProgressOverlay(
+        title: "Loading Data",
+        message: "Fetching from server..."
+    )
+    
+    do {
+        let data = try await api.fetchData()
+        toast.dismissProgressOverlay()
+        toast.success("Data loaded successfully!")
+    } catch {
+        toast.dismissProgressOverlay()
+        toast.error("Failed to load data")
+    }
+}
+```
+
+#### Long Running Task
+```swift
+func processLargeFile() async {
+    let config = ProgressOverlayConfiguration(
+        backgroundColor: .purple,
+        backgroundOpacity: 0.9,
+        cornerRadius: 24,
+        isBlocking: true
+    )
+    
+    toast.showProgressOverlay(
+        title: "Processing File",
+        message: "This may take a few minutes",
+        configuration: config,
+        dismissible: false
+    )
+    
+    await performLongTask()
+    
+    toast.dismissProgressOverlay()
+    toast.success("Processing complete!")
+}
+```
+
+#### Custom Progress Indicator
+```swift
+@State private var progress: Double = 0.0
+
+func uploadFile() {
+    toast.showProgressOverlay {
+        VStack(spacing: 20) {
+            ProgressView(value: progress, total: 1.0)
+                .progressViewStyle(.linear)
+                .tint(.blue)
+                .frame(width: 200)
+            
+            Text("Uploading: \(Int(progress * 100))%")
+                .font(.headline)
+            
+            Text("Please don't close the app")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+    
+    // Update progress and dismiss when done
+    Task {
+        for i in 0...100 {
+            progress = Double(i) / 100.0
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        toast.dismissProgressOverlay()
+        toast.success("Upload complete!")
+    }
+}
+```
+
+---
+
 
 ## Dialog System
 

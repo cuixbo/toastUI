@@ -9,10 +9,11 @@ import SwiftUI
 
 public class ToastManager: ObservableObject, @unchecked Sendable {
     @Published public var toasts: [ToastMessage] = []
+    @Published public var progressOverlay: ProgressOverlayMessage?
     private var workItems: [UUID: DispatchWorkItem] = [:]
-   
+
     public static let shared = ToastManager()
-    
+
     public init() {}
     
     // MARK: - Main Present Method
@@ -310,5 +311,70 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         if let last = toasts.last {
             dismiss(id: last.id)
         }
+    }
+
+    // MARK: - Progress Overlay Methods
+
+    /// Show progress overlay with default spinner
+    @MainActor
+    public func showProgressOverlay(
+        title: String? = nil,
+        message: String? = nil,
+        position: ProgressOverlayPosition = .center,
+        configuration: ProgressOverlayConfiguration = .default,
+        dismissible: Bool = false
+    ) {
+        let overlay = ProgressOverlayMessage(
+            title: title,
+            message: message,
+            position: position,
+            configuration: configuration,
+            dismissible: dismissible,
+            onDismiss: { [weak self] in
+                self?.dismissProgressOverlay()
+            }
+        )
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            progressOverlay = overlay
+        }
+    }
+
+    /// Show progress overlay with custom view
+    @MainActor
+    public func showProgressOverlay<Content: View>(
+        title: String? = nil,
+        message: String? = nil,
+        position: ProgressOverlayPosition = .center,
+        configuration: ProgressOverlayConfiguration = .default,
+        dismissible: Bool = false,
+        @ViewBuilder customView: () -> Content
+    ) {
+        let overlay = ProgressOverlayMessage(
+            title: title,
+            message: message,
+            position: position,
+            configuration: configuration,
+            customView: AnyView(customView()),
+            dismissible: dismissible,
+            onDismiss: { [weak self] in
+                self?.dismissProgressOverlay()
+            }
+        )
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            progressOverlay = overlay
+        }
+    }
+
+    /// Dismiss progress overlay
+    @MainActor
+    public func dismissProgressOverlay() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            progressOverlay = nil
+        }
+    }
+
+    /// Check if progress overlay is showing
+    public var isProgressOverlayShowing: Bool {
+        progressOverlay != nil
     }
 }

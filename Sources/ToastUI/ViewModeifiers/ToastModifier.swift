@@ -28,12 +28,34 @@ struct ToastWindowRootView: View {
     @ObservedObject var windowManager: ToastWindowManager
     
     var body: some View {
-        VStack(spacing: 0) {
-            topToastsSection
-            Spacer(minLength: 0)
-            centerToastsSection
-            Spacer(minLength: 0)
-            bottomToastsSection
+        ZStack {
+            VStack(spacing: 0) {
+                topToastsSection
+                Spacer(minLength: 0)
+                centerToastsSection
+                Spacer(minLength: 0)
+                bottomToastsSection
+            }
+
+            // Progress Overlay
+            if let overlay = manager.progressOverlay {
+                ZStack {
+                    // Backdrop
+                    if overlay.configuration.isBlocking {
+                        Color.black
+                            .opacity(overlay.configuration.backdropOpacity)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                // Block interactions when backdrop is visible
+                            }
+                    }
+
+                    // Progress overlay
+                    progressOverlayContent(for: overlay)
+                }
+                .transition(.opacity)
+                .zIndex(999)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -144,7 +166,33 @@ struct ToastWindowRootView: View {
             manager.dismiss(id: toast.id)
         }
     }
-    
+
+    @ViewBuilder
+    private func progressOverlayContent(for overlay: ProgressOverlayMessage) -> some View {
+        GeometryReader { geometry in
+            ProgressOverlayView(
+                overlay: overlay,
+                onDismiss: {
+                    overlay.onDismiss?()
+                }
+            )
+            .position(position(for: overlay.position, in: geometry.size))
+        }
+    }
+
+    private func position(for position: ProgressOverlayPosition, in size: CGSize) -> CGPoint {
+        switch position {
+        case .top:
+            return CGPoint(x: size.width / 2, y: size.height * 0.25)
+        case .center:
+            return CGPoint(x: size.width / 2, y: size.height / 2)
+        case .bottom:
+            return CGPoint(x: size.width / 2, y: size.height * 0.75)
+        case .custom(let x, let y):
+            return CGPoint(x: x, y: y)
+        }
+    }
+
     // MARK: - Stack Calculations
     
     private func calculateScale(for index: Int, total: Int) -> CGFloat {
