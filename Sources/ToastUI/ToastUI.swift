@@ -17,7 +17,10 @@ struct ToastView: View {
     }
 
     private var supportsGlassEffect: Bool {
-        DeviceCapabilities.supportsGlassEffect
+        if #available(iOS 26.0, macOS 15.0, *) {
+            return true
+        }
+        return false
     }
 
     var body: some View {
