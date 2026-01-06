@@ -1,9 +1,7 @@
-
 //
 //  ToastView.swift
 //  ToastPackage
 //
-
 
 import SwiftUI
 
@@ -40,17 +38,17 @@ struct ToastView: View {
             standardView
         }
     }
-    
+
     // MARK: - Progress View
     private var progressView: some View {
         HStack(spacing: 12) {
             ProgressView()
                 .tint(.white)
-            
+
             Text(toast.title)
                 .font(.headline)
                 .foregroundStyle(.white)
-            
+
             Spacer()
         }
         .padding(.horizontal, toast.configuration.horizontalPadding)
@@ -67,7 +65,7 @@ struct ToastView: View {
         )
         .padding(.horizontal)
     }
-    
+
     // MARK: - Standard View
     private var standardView: some View {
         HStack(spacing: 12) {
@@ -80,13 +78,13 @@ struct ToastView: View {
                     .font(.title2)
                     .foregroundStyle(.white)
             }
-            
+
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(toast.title)
                     .font(.headline)
                     .foregroundStyle(.white)
-                
+
                 if let message = toast.message {
                     Text(message)
                         .font(.subheadline)
@@ -94,9 +92,9 @@ struct ToastView: View {
                         .lineLimit(3)
                 }
             }
-            
+
             Spacer()
-            
+
             // Action buttons
             HStack(spacing: 12) {
                 // Copy button
@@ -105,7 +103,7 @@ struct ToastView: View {
                         ZStack {
                             Image(systemName: "doc.on.doc")
                                 .opacity(showCopiedFeedback ? 0 : 1)
-                            
+
                             Image(systemName: "checkmark")
                                 .opacity(showCopiedFeedback ? 1 : 0)
                         }
@@ -114,7 +112,7 @@ struct ToastView: View {
                         .animation(.spring(duration: 0.3), value: showCopiedFeedback)
                     }
                 }
-                
+
                 // Close button
                 if toast.showCloseButton {
                     Button(action: onDismiss) {
@@ -139,7 +137,7 @@ struct ToastView: View {
         )
         .padding(.horizontal)
     }
-    
+
     // MARK: - Glass Effect View (iOS 26+)
     @available(iOS 26.0, *)
     private var glassView: some View {
@@ -297,10 +295,10 @@ struct ToastView: View {
 
     private func copyToClipboard() {
         #if os(iOS)
-        UIPasteboard.general.string = toast.copyableText
+            UIPasteboard.general.string = toast.copyableText
         #elseif os(macOS)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(toast.copyableText, forType: .string)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(toast.copyableText, forType: .string)
         #endif
 
         // Show feedback
