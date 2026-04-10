@@ -66,6 +66,9 @@ struct ToastWindowRootView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea()
+        .onReceive(manager.$toasts) { toasts in
+            pruneToastFrames(for: toasts)
+        }
     }
 
     private func maxAdaptiveWidth(for containerWidth: CGFloat, toast: ToastMessage) -> CGFloat {
@@ -121,7 +124,7 @@ struct ToastWindowRootView: View {
         .frame(maxHeight: topToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: topToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
-            windowManager.toastFrames.merge(frames) { _, new in new }
+            syncToastFrames(frames)
         }
     }
     
@@ -152,7 +155,7 @@ struct ToastWindowRootView: View {
         .frame(maxHeight: centerToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: centerToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
-            windowManager.toastFrames.merge(frames) { _, new in new }
+            syncToastFrames(frames)
         }
     }
     
@@ -188,7 +191,7 @@ struct ToastWindowRootView: View {
         .frame(maxHeight: bottomToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: bottomToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
-            windowManager.toastFrames.merge(frames) { _, new in new }
+            syncToastFrames(frames)
         }
     }
     
@@ -201,32 +204,69 @@ struct ToastWindowRootView: View {
                 manager.dismiss(id: toast.id)
             }
         )
+        let isWidthAdaptive = toast.configuration.isWidthAdaptive
         
         switch toast.configuration.horizontalAlignment {
         case .leading:
-            toastBody
-                .frame(
-                    maxWidth: containerWidth,
-                    alignment: alignment(for: toast.configuration.horizontalAlignment)
-                )
-        case .center:
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
+            if isWidthAdaptive {
+                toastBody
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.preference(
+                                key: ToastFramePreferenceKey.self,
+                                value: [toast.id: geometry.frame(in: .global)]
+                            )
+                        }
+                    )
+            } else {
                 toastBody
                     .frame(
                         maxWidth: containerWidth,
                         alignment: alignment(for: toast.configuration.horizontalAlignment)
                     )
+            }
+        case .center:
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                if isWidthAdaptive {
+                    toastBody
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.preference(
+                                    key: ToastFramePreferenceKey.self,
+                                    value: [toast.id: geometry.frame(in: .global)]
+                                )
+                            }
+                        )
+                } else {
+                    toastBody
+                        .frame(
+                            maxWidth: containerWidth,
+                            alignment: alignment(for: toast.configuration.horizontalAlignment)
+                        )
+                }
                 Spacer(minLength: 0)
             }
         case .trailing:
             HStack(spacing: 0) {
                 Spacer(minLength: 0)
-                toastBody
-                    .frame(
-                        maxWidth: containerWidth,
-                        alignment: alignment(for: toast.configuration.horizontalAlignment)
-                    )
+                if isWidthAdaptive {
+                    toastBody
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.preference(
+                                    key: ToastFramePreferenceKey.self,
+                                    value: [toast.id: geometry.frame(in: .global)]
+                                )
+                            }
+                        )
+                } else {
+                    toastBody
+                        .frame(
+                            maxWidth: containerWidth,
+                            alignment: alignment(for: toast.configuration.horizontalAlignment)
+                        )
+                }
             }
         }
     }
@@ -269,6 +309,18 @@ struct ToastWindowRootView: View {
     }
 
     // MARK: - Stack Calculations
+    
+    private func pruneToastFrames(for toasts: [ToastMessage]) {
+        let activeToastIds = Set(toasts.map(\.id))
+        windowManager.toastFrames = windowManager.toastFrames.filter { activeToastIds.contains($0.key) }
+    }
+    
+    private func syncToastFrames(_ frames: [UUID: CGRect]) {
+        var updatedFrames = windowManager.toastFrames
+        updatedFrames.merge(frames) { _, new in new }
+        let activeToastIds = Set(manager.toasts.map(\.id))
+        windowManager.toastFrames = updatedFrames.filter { activeToastIds.contains($0.key) }
+    }
     
     private func calculateScale(for index: Int, total: Int) -> CGFloat {
         let maxVisible = 3

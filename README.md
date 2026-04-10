@@ -220,6 +220,32 @@ toast.success(
     )
 )
 ```
+### Toast Layout Configuration
+
+`horizontalAlignment` and `contentAlignment` are independent:
+
+- `horizontalAlignment` controls the toast block position in its container (leading / center / trailing).
+- `contentAlignment` controls the title+message stack alignment inside the toast body (leading / center / trailing).
+- `textAlignment` is still defined inside `ToastTextStyle` and controls line alignment inside each `Text`.
+- `minimumHeight` sets the toast container minimum height (`0` means no minimum by default).
+- `maximumWidth` sets a cap for the toast container (`0` means no limit).
+- `minimumWidth` sets a floor for the toast container (`0` means no minimum).
+
+```swift
+toast.info(
+    "提交成功",
+    alignment: .top,
+    titleStyle: .init(font: .system(size: 17), textAlignment: .center),
+    configuration: .init(
+        horizontalAlignment: .center,
+        contentAlignment: .leading,
+        minimumHeight: 60,
+        maximumWidth: 280,
+        minimumWidth: 180,
+        isWidthAdaptive: true
+    )
+)
+```
 
 ### Copy to Clipboard
 

@@ -7,10 +7,16 @@
 
 import SwiftUI
 
+public enum ToastQueueMode: Sendable {
+    case keepAll
+    case dropOldestVisibleLimit(Int)
+}
+
 public class ToastManager: ObservableObject, @unchecked Sendable {
     @Published public var toasts: [ToastMessage] = []
     @Published public var progressOverlay: ProgressOverlayMessage?
     private var workItems: [UUID: DispatchWorkItem] = [:]
+    public var queueMode: ToastQueueMode = .keepAll
 
     public static let shared = ToastManager()
 
@@ -115,6 +121,10 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             toasts.append(toast)
         }
+
+        if case let .dropOldestVisibleLimit(limit) = queueMode, limit > 0 {
+            enforceQueueLimit(alignment: toast.alignment, limit: limit)
+        }
         
         // Cancel timers for all toasts in this alignment (they're no longer topmost)
         let sameAlignmentToasts = toasts.filter { $0.alignment == toast.alignment }
@@ -125,6 +135,23 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         
         // Schedule auto-dismiss for non-progress toasts
         scheduleAutoDismiss(for: toast)
+    }
+
+    @MainActor
+    private func enforceQueueLimit(alignment: ToastAlignment, limit: Int) {
+        let alignmentToasts = toasts.enumerated().filter { $0.element.alignment == alignment }
+        let overflowCount = alignmentToasts.count - limit
+        guard overflowCount > 0 else { return }
+        
+        let removeIds = alignmentToasts.prefix(overflowCount).map { $0.element.id }
+        for id in removeIds {
+            workItems[id]?.cancel()
+            workItems.removeValue(forKey: id)
+        }
+        
+        toasts.removeAll { toast in
+            toast.alignment == alignment && removeIds.contains(toast.id)
+        }
     }
     
     @MainActor
@@ -317,8 +344,8 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
             type: .glass,
             duration: duration,
             alignment: alignment,
-            titleStyle: titleStyle,
-            messageStyle: messageStyle,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: nil,
             configuration: configuration,
             showCloseButton: showCloseButton,

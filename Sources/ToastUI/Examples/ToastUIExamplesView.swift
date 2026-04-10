@@ -235,6 +235,12 @@ struct ToastExamplesTab: View {
                                 .buttonStyle(.borderedProminent)
                                 .tint(.cyan)
 
+                                Button("Upload Progress (0% → 100%)") {
+                                    simulateUploadProgress()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(.blue)
+
                                 Text("Progress toasts show at top with dismiss button")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -406,6 +412,23 @@ struct ToastExamplesTab: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             toast.warning(title: "Third notification", alignment: .top)
+        }
+    }
+
+    private func simulateUploadProgress() {
+        showDismissButton = true
+        let totalSteps = 11
+        for step in 0..<totalSteps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + (Double(step) * 0.45)) {
+                let percent = Int((Double(step) / Double(totalSteps - 1)) * 100)
+                if step == totalSteps - 1 {
+                    toast.dismiss()
+                    toast.success(title: "Upload complete", message: "Your files have been uploaded successfully")
+                    showDismissButton = false
+                } else {
+                    toast.progress(title: "Uploading files... \(percent)%", alignment: .top)
+                }
+            }
         }
     }
 }

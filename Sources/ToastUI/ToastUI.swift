@@ -5,6 +5,7 @@
 
 
 import SwiftUI
+import Foundation
 
 struct ToastView: View {
     let toast: ToastMessage
@@ -38,6 +39,48 @@ struct ToastView: View {
         toast.configuration.isWidthAdaptive
     }
 
+    private var effectiveMinimumWidth: CGFloat {
+        let configuredMinimumWidth = toast.configuration.minimumWidth
+        guard configuredMinimumWidth > 0 else {
+            return 0
+        }
+        return isWidthAdaptive ? min(containerWidth, configuredMinimumWidth) : configuredMinimumWidth
+    }
+
+    private var effectiveMaximumWidth: CGFloat {
+        let configuredMaximumWidth = toast.configuration.maximumWidth
+        if configuredMaximumWidth <= 0 {
+            return .infinity
+        }
+
+        let maxWidth = isWidthAdaptive ? min(containerWidth, configuredMaximumWidth) : configuredMaximumWidth
+        return isWidthAdaptive ? maxWidth : configuredMaximumWidth
+    }
+
+    private var resolvedWidthRange: (min: CGFloat, max: CGFloat) {
+        let minWidth = effectiveMinimumWidth
+        let maxWidth = effectiveMaximumWidth
+        if minWidth <= 0 {
+            return (minWidth, maxWidth)
+        }
+        if maxWidth.isFinite && maxWidth < minWidth {
+            return (maxWidth, maxWidth)
+        }
+        return (minWidth, maxWidth)
+    }
+
+    private var enforcedWidthRange: (min: CGFloat, max: CGFloat) {
+        let widthRange = resolvedWidthRange
+        let maxWidth = widthRange.max.isFinite ? widthRange.max : .infinity
+        if maxWidth < 0 {
+            return (0, 0)
+        }
+        if widthRange.min < 0 {
+            return (0, maxWidth)
+        }
+        return (widthRange.min, maxWidth)
+    }
+
     private var iconSpacing: CGFloat {
         toast.configuration.iconSpacing
     }
@@ -45,7 +88,18 @@ struct ToastView: View {
     private var titleMessageSpacing: CGFloat {
         toast.configuration.titleMessageSpacing
     }
-    
+
+    private var contentStackAlignment: HorizontalAlignment {
+        switch toast.configuration.contentAlignment {
+        case .leading:
+            return .leading
+        case .center:
+            return .center
+        case .trailing:
+            return .trailing
+        }
+    }
+
     private var toastShape: ToastContainerShape {
         ToastContainerShape(
             isCapsule: toast.configuration.isCapsule,
@@ -70,7 +124,7 @@ struct ToastView: View {
         borderOpacity: Double = 0,
         borderColor: Color = .white
     ) -> some View {
-        content()
+        let toastBody = content()
             .padding(.horizontal, toast.configuration.horizontalPadding)
             .padding(.vertical, toast.configuration.verticalPadding)
             .background(
@@ -88,11 +142,17 @@ struct ToastView: View {
                     .stroke(borderColor.opacity(borderOpacity), lineWidth: borderOpacity > 0 ? 1 : 0)
             )
             .fixedSize(horizontal: false, vertical: false)
-            .frame(
-                maxWidth: isWidthAdaptive ? containerWidth : .infinity,
-                alignment: frameAlignment
-            )
-            .padding(.horizontal, isWidthAdaptive ? 0 : toast.configuration.horizontalMargin)
+
+        return Group {
+            toastBody
+                .frame(
+                    minWidth: enforcedWidthRange.min,
+                    maxWidth: enforcedWidthRange.max,
+                    minHeight: max(0, toast.configuration.minimumHeight),
+                    alignment: frameAlignment
+                )
+        }
+        .padding(.horizontal, isWidthAdaptive ? 0 : toast.configuration.horizontalMargin)
     }
     
     var body: some View {
@@ -145,7 +205,7 @@ struct ToastView: View {
                 }
                 
                 // Content
-                VStack(alignment: .leading, spacing: titleMessageSpacing) {
+                VStack(alignment: contentStackAlignment, spacing: titleMessageSpacing) {
                     Text(toast.title)
                         .toastStyled(toast.titleStyle)
                     
@@ -159,30 +219,32 @@ struct ToastView: View {
                     Spacer()
                 }
                 
-                // Action buttons
-                HStack(spacing: 12) {
-                    // Copy button
-                    if toast.enableCopy {
-                        Button(action: copyToClipboard) {
-                            ZStack {
-                                Image(systemName: "doc.on.doc")
-                                    .opacity(showCopiedFeedback ? 0 : 1)
-                                
-                                Image(systemName: "checkmark")
-                                    .opacity(showCopiedFeedback ? 1 : 0)
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.white.opacity(0.7))
-                            .animation(.spring(duration: 0.3), value: showCopiedFeedback)
-                        }
-                    }
-                    
-                    // Close button
-                    if toast.showCloseButton {
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
+                if toast.enableCopy || toast.showCloseButton {
+                    // Action buttons
+                    HStack(spacing: 12) {
+                        // Copy button
+                        if toast.enableCopy {
+                            Button(action: copyToClipboard) {
+                                ZStack {
+                                    Image(systemName: "doc.on.doc")
+                                        .opacity(showCopiedFeedback ? 0 : 1)
+                                    
+                                    Image(systemName: "checkmark")
+                                        .opacity(showCopiedFeedback ? 1 : 0)
+                                }
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.7))
+                                .animation(.spring(duration: 0.3), value: showCopiedFeedback)
+                            }
+                        }
+                        
+                        // Close button
+                        if toast.showCloseButton {
+                            Button(action: onDismiss) {
+                                Image(systemName: "xmark")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
                         }
                     }
                 }
@@ -206,7 +268,7 @@ struct ToastView: View {
                 }
 
                 // Content
-                VStack(alignment: .leading, spacing: titleMessageSpacing) {
+                VStack(alignment: contentStackAlignment, spacing: titleMessageSpacing) {
                     Text(toast.title)
                         .toastStyled(toast.titleStyle)
 
@@ -215,35 +277,37 @@ struct ToastView: View {
                             .toastStyled(toast.messageStyle)
                     }
                 }
-
+                
                 if !isWidthAdaptive {
                     Spacer()
                 }
 
-                // Action buttons
-                HStack(spacing: 12) {
-                    // Copy button
-                    if toast.enableCopy {
-                        Button(action: copyToClipboard) {
-                            ZStack {
-                                Image(systemName: "doc.on.doc")
-                                    .opacity(showCopiedFeedback ? 0 : 1)
-                                
-                                Image(systemName: "checkmark")
-                                    .opacity(showCopiedFeedback ? 1 : 0)
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .animation(.spring(duration: 0.3), value: showCopiedFeedback)
-                        }
-                    }
-
-                    // Close button
-                    if toast.showCloseButton {
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
+                if toast.enableCopy || toast.showCloseButton {
+                    // Action buttons
+                    HStack(spacing: 12) {
+                        // Copy button
+                        if toast.enableCopy {
+                            Button(action: copyToClipboard) {
+                                ZStack {
+                                    Image(systemName: "doc.on.doc")
+                                        .opacity(showCopiedFeedback ? 0 : 1)
+                                    
+                                    Image(systemName: "checkmark")
+                                        .opacity(showCopiedFeedback ? 1 : 0)
+                                }
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .animation(.spring(duration: 0.3), value: showCopiedFeedback)
+                            }
+                        }
+
+                        // Close button
+                        if toast.showCloseButton {
+                            Button(action: onDismiss) {
+                                Image(systemName: "xmark")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -266,7 +330,7 @@ struct ToastView: View {
                 }
 
                 // Content
-                VStack(alignment: .leading, spacing: titleMessageSpacing) {
+                VStack(alignment: contentStackAlignment, spacing: titleMessageSpacing) {
                     Text(toast.title)
                         .toastStyled(toast.titleStyle)
 
@@ -280,30 +344,32 @@ struct ToastView: View {
                     Spacer()
                 }
 
-                // Action buttons
-                HStack(spacing: 12) {
-                    // Copy button
-                    if toast.enableCopy {
-                        Button(action: copyToClipboard) {
-                            ZStack {
-                                Image(systemName: "doc.on.doc")
-                                    .opacity(showCopiedFeedback ? 0 : 1)
-                                
-                                Image(systemName: "checkmark")
-                                    .opacity(showCopiedFeedback ? 1 : 0)
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .animation(.spring(duration: 0.3), value: showCopiedFeedback)
-                        }
-                    }
-
-                    // Close button
-                    if toast.showCloseButton {
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
+                if toast.enableCopy || toast.showCloseButton {
+                    // Action buttons
+                    HStack(spacing: 12) {
+                        // Copy button
+                        if toast.enableCopy {
+                            Button(action: copyToClipboard) {
+                                ZStack {
+                                    Image(systemName: "doc.on.doc")
+                                        .opacity(showCopiedFeedback ? 0 : 1)
+                                    
+                                    Image(systemName: "checkmark")
+                                        .opacity(showCopiedFeedback ? 1 : 0)
+                                }
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                                .animation(.spring(duration: 0.3), value: showCopiedFeedback)
+                            }
+                        }
+
+                        // Close button
+                        if toast.showCloseButton {
+                            Button(action: onDismiss) {
+                                Image(systemName: "xmark")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }

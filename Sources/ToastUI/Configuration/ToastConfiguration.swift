@@ -24,7 +24,18 @@ public struct ToastConfiguration : Sendable {
     public let horizontalPadding: CGFloat
     public let verticalPadding: CGFloat
     public let horizontalMargin: CGFloat
+    /// Minimum height of the toast container.
+    public let minimumHeight: CGFloat
+    /// Maximum width of the toast container. Use 0 to disable the limit.
+    public let maximumWidth: CGFloat
+    /// Minimum width of the toast container. Use 0 to disable the limit.
+    public let minimumWidth: CGFloat
+
+    /// Controls where the whole toast view is placed in its container.
     public let horizontalAlignment: HorizontalAlignment
+
+    /// Controls how the text stack (title / message) is aligned inside the toast body.
+    public let contentAlignment: HorizontalAlignment
     public let iconSpacing: CGFloat
     public let titleMessageSpacing: CGFloat
     public let showIcon: Bool
@@ -43,7 +54,11 @@ public struct ToastConfiguration : Sendable {
         horizontalPadding: CGFloat = 16,
         verticalPadding: CGFloat = 16,
         horizontalMargin: CGFloat = 16,
+        minimumHeight: CGFloat = 0,
+        maximumWidth: CGFloat = 0,
+        minimumWidth: CGFloat = 0,
         horizontalAlignment: HorizontalAlignment = .leading,
+        contentAlignment: HorizontalAlignment = .leading,
         iconSpacing: CGFloat = 12,
         titleMessageSpacing: CGFloat = 4,
         showIcon: Bool = true,
@@ -61,7 +76,11 @@ public struct ToastConfiguration : Sendable {
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
         self.horizontalMargin = horizontalMargin
+        self.minimumHeight = minimumHeight
+        self.maximumWidth = maximumWidth
+        self.minimumWidth = minimumWidth
         self.horizontalAlignment = horizontalAlignment
+        self.contentAlignment = contentAlignment
         self.iconSpacing = iconSpacing
         self.titleMessageSpacing = titleMessageSpacing
         self.showIcon = showIcon
