@@ -198,6 +198,29 @@ toast.show(
 )
 ```
 
+### Custom Text Style
+
+Use `ToastTextStyle` for title/message text in any toast:
+
+```swift
+toast.success(
+    "Upload failed",
+    message: "Please check your network connection and retry.",
+    titleStyle: .init(
+        font: .system(size: 17, weight: .semibold),
+        color: .yellow,
+        lineSpacing: 2,
+        lineLimit: 2,
+        truncationMode: .tail
+    ),
+    messageStyle: .init(
+        font: .system(size: 14),
+        color: .white.opacity(0.9),
+        lineLimit: 3
+    )
+)
+```
+
 ### Copy to Clipboard
 
 ```swift
@@ -552,12 +575,55 @@ Full support on macOS 13.1+.
 
 // Show methods
 toast.show(_ message: ToastMessage)
-toast.success(_ title: String, message: String? = nil, alignment: ToastAlignment = .top)
-toast.error(_ title: String, message: String? = nil, alignment: ToastAlignment = .top, enableCopy: Bool = false)
-toast.warning(_ title: String, message: String? = nil, alignment: ToastAlignment = .top)
-toast.info(_ title: String, message: String? = nil, alignment: ToastAlignment = .top)
-toast.glass(_ title: String, message: String? = nil, alignment: ToastAlignment = .top)
-toast.progress(_ title: String, message: String? = nil, alignment: ToastAlignment = .center)
+toast.success(
+    _ title: String,
+    message: String? = nil,
+    alignment: ToastAlignment = .top,
+    titleStyle: ToastTextStyle = .defaultTitle,
+    messageStyle: ToastTextStyle = .defaultMessage,
+    showCloseButton: Bool = true,
+    enableCopy: Bool = false
+)
+toast.error(
+    _ title: String,
+    message: String? = nil,
+    alignment: ToastAlignment = .top,
+    titleStyle: ToastTextStyle = .defaultTitle,
+    messageStyle: ToastTextStyle = .defaultMessage,
+    showCloseButton: Bool = true,
+    enableCopy: Bool = false
+)
+toast.warning(
+    _ title: String,
+    message: String? = nil,
+    alignment: ToastAlignment = .top,
+    titleStyle: ToastTextStyle = .defaultTitle,
+    messageStyle: ToastTextStyle = .defaultMessage,
+    showCloseButton: Bool = true,
+    enableCopy: Bool = false
+)
+toast.info(
+    _ title: String,
+    message: String? = nil,
+    alignment: ToastAlignment = .top,
+    titleStyle: ToastTextStyle = .defaultTitle,
+    messageStyle: ToastTextStyle = .defaultMessage,
+    showCloseButton: Bool = true,
+    enableCopy: Bool = false
+)
+toast.glass(
+    _ title: String,
+    message: String? = nil,
+    alignment: ToastAlignment = .top,
+    titleStyle: ToastTextStyle = .glassTitle,
+    messageStyle: ToastTextStyle = .glassMessage
+)
+toast.progress(
+    _ title: String,
+    alignment: ToastAlignment = .center,
+    titleStyle: ToastTextStyle = .defaultTitle,
+    messageStyle: ToastTextStyle = .defaultMessage
+)
 
 // Dismiss
 toast.dismiss(id: UUID)

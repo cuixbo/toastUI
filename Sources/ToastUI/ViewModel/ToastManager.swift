@@ -25,11 +25,16 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         type: ToastType,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+        
         presentToast(
             ToastMessage(
                 title: title,
@@ -37,6 +42,8 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
                 type: type,
                 duration: duration,
                 alignment: alignment,
+                titleStyle: resolvedTitleStyle,
+                messageStyle: resolvedMessageStyle,
                 backgroundColor: backgroundColor,
                 configuration: configuration,
                 showCloseButton: showCloseButton,
@@ -54,12 +61,17 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         type: ToastType,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false,
         @ViewBuilder icon: () -> Icon
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         presentToast(
             ToastMessage(
                 title: title,
@@ -67,6 +79,8 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
                 type: type,
                 duration: duration,
                 alignment: alignment,
+                titleStyle: resolvedTitleStyle,
+                messageStyle: resolvedMessageStyle,
                 backgroundColor: backgroundColor,
                 configuration: configuration,
                 showCloseButton: showCloseButton,
@@ -137,17 +151,24 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         message: String? = nil,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         present(
             title: title,
             message: message,
             type: .success,
             duration: duration,
             alignment: alignment,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: backgroundColor,
             configuration: configuration,
             showCloseButton: showCloseButton,
@@ -161,17 +182,24 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         message: String? = nil,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         present(
             title: title,
             message: message,
             type: .error,
             duration: duration,
             alignment: alignment,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: backgroundColor,
             configuration: configuration,
             showCloseButton: showCloseButton,
@@ -185,17 +213,24 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         message: String? = nil,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         present(
             title: title,
             message: message,
             type: .warning,
             duration: duration,
             alignment: alignment,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: backgroundColor,
             configuration: configuration,
             showCloseButton: showCloseButton,
@@ -209,17 +244,24 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         message: String? = nil,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         present(
             title: title,
             message: message,
             type: .info,
             duration: duration,
             alignment: alignment,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: backgroundColor,
             configuration: configuration,
             showCloseButton: showCloseButton,
@@ -231,15 +273,22 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
     public func progress(
         title: String,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default
     ) {
+        let resolvedTitleStyle = titleStyle ?? configuration.titleStyle
+        let resolvedMessageStyle = messageStyle ?? configuration.messageStyle
+
         present(
             title: title,
             message: nil,
             type: .progress,
             duration: .infinity,
             alignment: alignment,
+            titleStyle: resolvedTitleStyle,
+            messageStyle: resolvedMessageStyle,
             backgroundColor: backgroundColor,
             configuration: configuration,
             showCloseButton: false,
@@ -253,10 +302,14 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
         message: String? = nil,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle? = nil,
+        messageStyle: ToastTextStyle? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
         enableCopy: Bool = false
     ) {
+        let resolvedTitleStyle = titleStyle ?? .glassTitle
+        let resolvedMessageStyle = messageStyle ?? .glassMessage
         // Glass effect with automatic fallback based on iOS version
         present(
             title: title,
@@ -264,6 +317,8 @@ public class ToastManager: ObservableObject, @unchecked Sendable {
             type: .glass,
             duration: duration,
             alignment: alignment,
+            titleStyle: titleStyle,
+            messageStyle: messageStyle,
             backgroundColor: nil,
             configuration: configuration,
             showCloseButton: showCloseButton,

@@ -7,6 +7,9 @@
 
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ToastViewModifier: ViewModifier {
     @ObservedObject var manager: ToastManager
@@ -28,45 +31,71 @@ struct ToastWindowRootView: View {
     @ObservedObject var windowManager: ToastWindowManager
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                topToastsSection
-                Spacer(minLength: 0)
-                centerToastsSection
-                Spacer(minLength: 0)
-                bottomToastsSection
-            }
-
-            // Progress Overlay
-            if let overlay = manager.progressOverlay {
-                ZStack {
-                    // Backdrop
-                    if overlay.configuration.isBlocking {
-                        Color.black
-                            .opacity(overlay.configuration.backdropOpacity)
-                            .ignoresSafeArea()
-                            .onTapGesture {
-                                // Block interactions when backdrop is visible
-                            }
-                    }
-
-                    // Progress overlay
-                    progressOverlayContent(for: overlay)
+        GeometryReader { geometry in
+            let fullWidth = geometry.size.width
+            
+            ZStack {
+                VStack(spacing: 0) {
+                    topToastsSection(containerWidth: fullWidth)
+                    Spacer(minLength: 0)
+                    centerToastsSection(containerWidth: fullWidth)
+                    Spacer(minLength: 0)
+                    bottomToastsSection(containerWidth: fullWidth)
                 }
-                .transition(.opacity)
-                .zIndex(999)
+                
+                // Progress Overlay
+                if let overlay = manager.progressOverlay {
+                    ZStack {
+                        // Backdrop
+                        if overlay.configuration.isBlocking {
+                            Color.black
+                                .opacity(overlay.configuration.backdropOpacity)
+                                .ignoresSafeArea()
+                                .onTapGesture {
+                                    // Block interactions when backdrop is visible
+                                }
+                        }
+
+                        // Progress overlay
+                        progressOverlayContent(for: overlay)
+                    }
+                    .transition(.opacity)
+                    .zIndex(999)
+                }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea()
+    }
+
+    private func maxAdaptiveWidth(for containerWidth: CGFloat, toast: ToastMessage) -> CGFloat {
+        guard toast.configuration.isWidthAdaptive else {
+            return containerWidth
+        }
+        return max(0, containerWidth - (toast.configuration.horizontalMargin * 2))
+    }
+
+    private var topSafeAreaPadding: CGFloat {
+        #if canImport(UIKit)
+        if let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow }) {
+            return keyWindow.safeAreaInsets.top
+        }
+        return 0
+        #else
+        return 0
+        #endif
     }
     
     @ViewBuilder
-    private var topToastsSection: some View {
+    private func topToastsSection(containerWidth: CGFloat) -> some View {
         let topToasts = manager.toasts.filter { $0.alignment == .top }
         
         ZStack {
             ForEach(Array(topToasts.enumerated()), id: \.element.id) { index, toast in
-                toastView(toast)
+                toastView(toast, containerWidth: maxAdaptiveWidth(for: containerWidth, toast: toast))
                     .scaleEffect(calculateScale(for: index, total: topToasts.count))
                     .offset(y: calculateStackOffset(for: index, total: topToasts.count, alignment: .top))
                     .opacity(calculateOpacity(for: index, total: topToasts.count))
@@ -87,7 +116,8 @@ struct ToastWindowRootView: View {
                     )
             }
         }
-        .padding(.top, topToasts.isEmpty ? 0 : 8)
+        .padding(.top, topSafeAreaPadding)
+        .frame(maxWidth: containerWidth)
         .frame(maxHeight: topToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: topToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
@@ -96,12 +126,12 @@ struct ToastWindowRootView: View {
     }
     
     @ViewBuilder
-    private var centerToastsSection: some View {
+    private func centerToastsSection(containerWidth: CGFloat) -> some View {
         let centerToasts = manager.toasts.filter { $0.alignment == .center }
         
         ZStack {
             ForEach(Array(centerToasts.enumerated()), id: \.element.id) { index, toast in
-                toastView(toast)
+                toastView(toast, containerWidth: maxAdaptiveWidth(for: containerWidth, toast: toast))
                     .scaleEffect(calculateScale(for: index, total: centerToasts.count))
                     .opacity(calculateOpacity(for: index, total: centerToasts.count))
                     .zIndex(Double(index))
@@ -118,6 +148,7 @@ struct ToastWindowRootView: View {
                     )
             }
         }
+        .frame(maxWidth: containerWidth)
         .frame(maxHeight: centerToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: centerToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
@@ -126,12 +157,12 @@ struct ToastWindowRootView: View {
     }
     
     @ViewBuilder
-    private var bottomToastsSection: some View {
+    private func bottomToastsSection(containerWidth: CGFloat) -> some View {
         let bottomToasts = manager.toasts.filter { $0.alignment == .bottom }
         
         ZStack {
             ForEach(Array(bottomToasts.enumerated()), id: \.element.id) { index, toast in
-                toastView(toast)
+                toastView(toast, containerWidth: maxAdaptiveWidth(for: containerWidth, toast: toast))
                     .scaleEffect(calculateScale(for: index, total: bottomToasts.count))
                     .offset(y: calculateStackOffset(for: index, total: bottomToasts.count, alignment: .bottom))
                     .opacity(calculateOpacity(for: index, total: bottomToasts.count))
@@ -153,6 +184,7 @@ struct ToastWindowRootView: View {
             }
         }
         .padding(.bottom, bottomToasts.isEmpty ? 0 : 8)
+        .frame(maxWidth: containerWidth)
         .frame(maxHeight: bottomToasts.isEmpty ? 0 : nil)
         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: bottomToasts.map { $0.id })
         .onPreferenceChange(ToastFramePreferenceKey.self) { frames in
@@ -161,9 +193,52 @@ struct ToastWindowRootView: View {
     }
     
     @ViewBuilder
-    private func toastView(_ toast: ToastMessage) -> some View {
-        ToastView(toast: toast) {
-            manager.dismiss(id: toast.id)
+    private func toastView(_ toast: ToastMessage, containerWidth: CGFloat) -> some View {
+        let toastBody = ToastView(
+            toast: toast,
+            containerWidth: containerWidth,
+            onDismiss: {
+                manager.dismiss(id: toast.id)
+            }
+        )
+        
+        switch toast.configuration.horizontalAlignment {
+        case .leading:
+            toastBody
+                .frame(
+                    maxWidth: containerWidth,
+                    alignment: alignment(for: toast.configuration.horizontalAlignment)
+                )
+        case .center:
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                toastBody
+                    .frame(
+                        maxWidth: containerWidth,
+                        alignment: alignment(for: toast.configuration.horizontalAlignment)
+                    )
+                Spacer(minLength: 0)
+            }
+        case .trailing:
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                toastBody
+                    .frame(
+                        maxWidth: containerWidth,
+                        alignment: alignment(for: toast.configuration.horizontalAlignment)
+                    )
+            }
+        }
+    }
+
+    private func alignment(for horizontalAlignment: ToastConfiguration.HorizontalAlignment) -> Alignment {
+        switch horizontalAlignment {
+        case .leading:
+            return .leading
+        case .center:
+            return .center
+        case .trailing:
+            return .trailing
         }
     }
 

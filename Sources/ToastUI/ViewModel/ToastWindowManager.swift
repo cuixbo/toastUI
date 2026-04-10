@@ -34,6 +34,7 @@ class ToastWindowManager: ObservableObject {
 
 
         let window = ToastPassThroughWindow(windowScene: windowScene)
+        window.frame = windowScene.coordinateSpace.bounds
         window.windowLevel = .alert + 1
         window.backgroundColor = .clear
         window.toastWindowManager = self

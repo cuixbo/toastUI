@@ -15,6 +15,8 @@ public struct ToastMessage: Identifiable, Equatable {
     public let type: ToastType
     public let duration: TimeInterval
     public let alignment: ToastAlignment
+    public let titleStyle: ToastTextStyle
+    public let messageStyle: ToastTextStyle
     public let customIcon: AnyView?
     public let backgroundColor: Color?
     public let configuration: ToastConfiguration
@@ -27,6 +29,8 @@ public struct ToastMessage: Identifiable, Equatable {
         type: ToastType,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle = .defaultTitle,
+        messageStyle: ToastTextStyle = .defaultMessage,
         customIcon: AnyView? = nil,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
@@ -38,6 +42,8 @@ public struct ToastMessage: Identifiable, Equatable {
         self.type = type
         self.duration = duration
         self.alignment = alignment
+        self.titleStyle = titleStyle
+        self.messageStyle = messageStyle
         self.customIcon = customIcon
         self.backgroundColor = backgroundColor
         self.configuration = configuration
@@ -65,6 +71,8 @@ public extension ToastMessage {
         type: ToastType,
         duration: TimeInterval = 3.0,
         alignment: ToastAlignment = .top,
+        titleStyle: ToastTextStyle = .defaultTitle,
+        messageStyle: ToastTextStyle = .defaultMessage,
         backgroundColor: Color? = nil,
         configuration: ToastConfiguration = .default,
         showCloseButton: Bool = true,
@@ -77,6 +85,8 @@ public extension ToastMessage {
             type: type,
             duration: duration,
             alignment: alignment,
+            titleStyle: titleStyle,
+            messageStyle: messageStyle,
             customIcon: AnyView(icon()),
             backgroundColor: backgroundColor,
             configuration: configuration,
